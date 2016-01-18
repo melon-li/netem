@@ -6,6 +6,7 @@ import re
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from novaclient import client
+import community
 
 AUTH_URL='http://192.168.99.112:35357/v3'
 USERNAME='admin'
