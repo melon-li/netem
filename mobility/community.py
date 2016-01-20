@@ -352,7 +352,10 @@ class Model(object):
         coordiantes_iter = self.create_coordiantes()
         while coordiantes_iter:
             self.cgr = []
-            coordiantes_iter.next()
+            try:
+                coordiantes_iter.next()
+            except StopIteration:
+                break
             for i in range(self.nodes_num):
                 self.cgr.append([])
                 for j in range(self.nodes_num):
@@ -418,16 +421,22 @@ class Model(object):
             
     def run(self):
         time_count = 0
+        time = 0
         flag = 0
         topology_iter = self.refresh_topology()
         while topology_iter:
             time_count = time_count + 1
+            time = time + 1
             sender = []
-            topology_iter.next()
-            if time_count%10 == 0:
-                flag = 1
-                sender = self.create_senders()
-            if (time_count-5)%10 == 0 and flag == 1:
+            try:
+                topology_iter.next()
+            except StopIteration:
+                break
+            if time <= self.g_time:
+                if time_count%10 == 0:
+                    flag = 1
+                    sender = self.create_senders()
+                if (time_count-5)%10 == 0 and flag == 1:
                     flag = 0
                     time_count = 5 
                     sender = self.create_senders(False)
@@ -509,7 +518,7 @@ if __name__ == '__main__':
         n = n + 1
        
 #         print(len(hh[0]))
-        print(hh[1])
+        if len(hh[1]):print(hh[1])
         print ""
 #         x_s.append(len(hh[0]))
 #         y_s.append(hh[1])
