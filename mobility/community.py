@@ -499,14 +499,14 @@ if __name__ == '__main__':
 #         print("\n")
         return tuple(patchs)
     
-#     anim = animation.FuncAnimation(fig, animate, 
-#                                init_func=init, 
-#                                 frames=360, 
-#                                interval=100,
-#                                blit=True)
+    anim = animation.FuncAnimation(fig, animate, 
+                                init_func=init, 
+                                 frames=360, 
+                                interval=100,
+                                blit=True)
 # #  
-#     plt.show()
-
+    plt.show()
+    sys.exit(0)
     n = 0
     gateways = []
     x_s = []

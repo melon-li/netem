@@ -8,7 +8,6 @@ import Queue
 import time
 import copy
 import multiprocessing
-import cPickle as pickle
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from neutronclient.v2_0 import client as neutron_client
@@ -30,7 +29,6 @@ EMU_NETWORK='private2'
 HOSTS_PATH='/etc/hosts'
 MANIFESTS_PATH='/etc/puppet/manifests/site.pp'
 IBR_CONFIG='/etc/puppet/files/ibrdtnd.conf'
-PICKLE_PATH='/etc/puppet/files/pickle/'
 
 def create_session():
     auth = v3.Password(auth_url=AUTH_URL, username=USERNAME,
@@ -255,40 +253,6 @@ class pre_command {
 ''' 
     file_obj.write(config_str)
 
-def pickle_pp(path_dir, host_index):
-    common_str = '''
-    file { "/tmp/%s":
-        ensure => present,
-        mode => 777,
-        owner => root,
-        group => root,
-        source =>"puppet://os/files/pickle/%s"
-    }
-
-'''
-    cgr_str = ''
-    senders_str = ''
-    receivers_str = ''
-    name = 'hosts2ports'
-    if os.path.exists(path_dir + name):
-        hosts2ports_str = common_str % (name, name)
-   
-    name = 'cgr_l.' + str(host_index + 1)
-    if os.path.exists(path_dir + name):
-        cgr_str = common_str % (name, name)
-   
-    name = 'senders.' + str(host_index + 1)
-    if os.path.exists(path_dir + name):
-        senders_str = common_str % (name, name)
-
-    name = 'receivers.' + str(host_index + 1)
-    if os.path.exists(path_dir + name):
-        receivers_str = common_str % (name, name)
-
-    pickle_str = hosts2ports_str + cgr_str + senders_str + receivers_str 
-    return pickle_str
-    
-
 def create_node_rec_command(dst_host, src_hosts):
     '''dst_host is list index, start from 0,
        dst_host is the host receiving dtn
@@ -391,71 +355,6 @@ def create_manifests(senders, receivers,hosts2ports, time_unit, time_after):
                 str_config = str_config + '}\n\n'
             file_obj.write(str_config)
 
-def create_manifests2(host_num, hosts2ports, time_after, time_unit):
-    '''creat puppet manifest, basing on mobility model,
-    '''
-    exec_time = time.time() + time_after
-    with open(MANIFESTS_PATH, 'w') as file_obj:
-        common_config(file_obj)
-#    sys.exit(0)
-        for i in range(host_num):
-            pickle_str = pickle_pp(PICKLE_PATH, i)
-            name = 'ibr-' + str(i+1)
-            port_id = hosts2ports[name][0]
-            interface =  'ns' + port_id[:11]
-            onlyif = "dtnd -c /etc/ibrdtn/ibrdtnd.conf -i " +\
-                       interface + " &"
-            command = "ifstat -i " + interface +\
-                       " >/root/exp/ibr/net/" + name + ".txt & " +\
-                      "netem-agent " + str(exec_time) + " " + str(time_unit)
-            #     '\tinclude pre_command\n' +\
-            str_config = 'node "' + name + '"{\n' + \
-                 '\tinclude ibrdtn_config\n' + \
-                 '\tinclude time_execute\n' +\
-                 '\tinclude pre_command\n' +\
-                 '\tinclude time_iptables\n' +\
-                 '\tinclude killdtn_file\n' 
-            if  time_after > 0:
-                str_config = str_config + pickle_str +\
-                     '\texec {\'' + command +'\':\n' +\
-                     '\t\tpath => "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:",\n' + \
-                     '\t\tonlyif => "' + onlyif +  '"\n\t}\n}\n\n'
-            elif time_after < 0:
-                #str_config = str_config + '\tinclude killdtn\n}\n\n'
-                str_config = str_config + '\tinclude test_time\n}\n\n'
-            elif time_after == 0:
-                str_config = str_config + pickle_str +'}\n\n'
-            file_obj.write(str_config)
-
-def put_list(cgr_l, cgr):
-    for i, cgr_s in enumerate(cgr):
-        if len(cgr_l) <= i:
-            cgr_l[i] = []
-            cgr_l[i].append(cgr_s)
-        else:
-            cgr_l[i].append(cgr_s)
-
-def pickle_dump(cgr_l, hosts2ports, senders, receivers):
-    if not os.path.isdir(PICKLE_PATH): os.makedirs(PICKLE_PATH)
-    path = PICKLE_PATH + 'hosts2ports'
-    with open(path, 'wb') as f:
-        pickle.dump(hosts2ports, f)
-    for i, cgr in cgr_l.iteritems():
-        path = PICKLE_PATH + 'cgr_l' + '.' + str(i + 1)
-        with open(path, 'wb') as f:
-            pickle.dump(cgr, f)
-
-        if senders.has_key(i):
-            path = PICKLE_PATH + 'senders' + '.' + str(i + 1)
-            with open(path, 'wb') as f:
-                pickle.dump(senders[i], f)
-          
-        if receivers.has_key(i):
-            path = PICKLE_PATH + 'receivers' + '.' + str(i + 1)
-            with open(path, 'wb') as f:
-                pickle.dump(receivers[i], f)
-
-
 def main():
     try:
         time_after = int(sys.argv[1])
@@ -483,9 +382,15 @@ def main():
                                                username=USERNAME,password=PASSWORD)
     hosts2ports = get_emu_ports(nova, neutron, EMU_NETWORK)
     if first_flag == 'True':
+        sec_groups = create_security_groups(hosts2ports, neutron)
         update_etc_hosts(nova, HOSTS_PATH)
+    else:
+        sec_groups = get_security_groups(hosts2ports.keys(), neutron)
 
-    cgr_l = {}
+    #from pprint import pprint
+    #pprint(sec_groups)
+    #sys.exit(0)
+    cgr_q = Queue.Queue(0)
     model = community.Model()
     model_iter = model.run()
     time_count = 0
@@ -501,8 +406,8 @@ def main():
             cgr, sender = model_iter.next()
         except StopIteration:
             break
-     
-        put_list(cgr_l, cgr)
+    #    cgr_q.put(cgr[0])
+        cgr_q.put(cgr)
         if len(sender):
             sender_count = sender_count + 1
             if not senders.has_key(sender[0]): senders[sender[0]] = []
@@ -513,33 +418,35 @@ def main():
         time_count = time_count + 1
         if t_count > 0  and  time_count > t_count: break
 
-    pickle_dump(cgr_l, hosts2ports, senders, receivers)   
-    create_manifests2(len(cgr_l), hosts2ports, time_after, 3 )
+   
+    import cPickle as pickle
+    with open("./dump.txt",'w') as f:
+        pickle.dump(cgr_q, f)
     sys.exit(0)
 
     # control topology  real-timely
     # test the longest time of updating topology once
-#    topology_ctl_iter = topology_ctl(cgr_q, hosts2ports, sec_groups, neutron, True)
-#    time_seq = []
-#    while topology_ctl_iter:
+    topology_ctl_iter = topology_ctl(cgr_q, hosts2ports, sec_groups, neutron, True)
+    time_seq = []
+    while topology_ctl_iter:
         #start = time.time()
-#        try:
-#            longest_time = topology_ctl_iter.next()
-#            if longest_time > 1: break
-#        except StopIteration:
-#            break
+        try:
+            longest_time = topology_ctl_iter.next()
+            if longest_time > 1: break
+        except StopIteration:
+            break
         #end = time.time()
         #time_seq.append(end-start)
         #time.sleep(0.01)
-#    print "longest_time:%s"  % longest_time
+    print "longest_time:%s"  % longest_time
     #for v in time_seq:
     #    print "time:%.5f" % (v, )
     
     #
-#    create_manifests(senders, receivers, hosts2ports, time_unit, time_after)
+    create_manifests(senders, receivers, hosts2ports, time_unit, time_after)
     #if test, exit here
-#    if time_after <=0 : sys.exit(0)
-#    sys.exit(0)
+    if time_after <=0 : sys.exit(0)
+    sys.exit(0)
     #for k,v in senders.iteritems():
     #   print "node %d: send num %d" % (k,len(v))
     #print "send_count :%d" % sender_count
