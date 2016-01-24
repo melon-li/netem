@@ -8,7 +8,6 @@ import Queue
 import time
 import copy
 import multiprocessing
-import cPickle as pickle
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from neutronclient.v2_0 import client as neutron_client
@@ -30,7 +29,6 @@ EMU_NETWORK='private2'
 HOSTS_PATH='/etc/hosts'
 MANIFESTS_PATH='/etc/puppet/manifests/site.pp'
 IBR_CONFIG='/etc/puppet/files/ibrdtnd.conf'
-PICKLE_PATH='/etc/puppet/files/pickle/'
 
 def create_session():
     auth = v3.Password(auth_url=AUTH_URL, username=USERNAME,
@@ -224,25 +222,6 @@ class killdtn_file {
     }
 }
 
-class killagent_file {
-    file { "/usr/bin/killagent":
-        ensure => present,
-        mode => 777,
-        owner => root,
-        group => root,
-        source =>"puppet://os/files/killagent"
-    }
-}
-
-class netem-agent_file {
-    file { "/usr/bin/netem-agent":
-        ensure => present,
-        mode => 777,
-        owner => root,
-        group => root,
-        source =>"puppet://os/files/netem-agent"
-    }
-}
 class time_iptables{
     file {"/usr/bin/test_time":
         ensure => present,
@@ -266,12 +245,6 @@ class killdtn{
     }
 }
 
-class killagent{
-    exec {"killagent":
-        path => "/usr/bin/:/usr/sbin/:/usr/local/bin:/usr/local/sbin:/sbin/:/bin"
-    }
-}
-
 class pre_command {
     exec {"mount -t nfs 192.168.99.112:/home/exp /root/exp":
            path => "/usr/bin/:/usr/sbin/:/usr/local/bin:/usr/local/sbin:/sbin/:/bin"
@@ -279,40 +252,6 @@ class pre_command {
 }
 ''' 
     file_obj.write(config_str)
-
-def pickle_pp(path_dir, host_index):
-    common_str = '''
-    file { "/tmp/%s":
-        ensure => present,
-        mode => 777,
-        owner => root,
-        group => root,
-        source =>"puppet://os/files/pickle/%s"
-    }
-
-'''
-    cgr_str = ''
-    senders_str = ''
-    receivers_str = ''
-    name = 'hosts2ports'
-    if os.path.exists(path_dir + name):
-        hosts2ports_str = common_str % (name, name)
-   
-    name = 'cgr_l.' + str(host_index + 1)
-    if os.path.exists(path_dir + name):
-        cgr_str = common_str % (name, name)
-   
-    name = 'senders.' + str(host_index + 1)
-    if os.path.exists(path_dir + name):
-        senders_str = common_str % (name, name)
-
-    name = 'receivers.' + str(host_index + 1)
-    if os.path.exists(path_dir + name):
-        receivers_str = common_str % (name, name)
-
-    pickle_str = hosts2ports_str + cgr_str + senders_str + receivers_str 
-    return pickle_str
-    
 
 def create_node_rec_command(dst_host, src_hosts):
     '''dst_host is list index, start from 0,
@@ -403,7 +342,6 @@ def create_manifests(senders, receivers,hosts2ports, time_unit, time_after):
                  '\tinclude time_execute\n' +\
                  '\tinclude pre_command\n' +\
                  '\tinclude time_iptables\n' +\
-                 '\tinclude netem-agent_file\n' +\
                  '\tinclude killdtn_file\n'
             if  time_after > 0:
                 str_config = str_config + \
@@ -416,114 +354,6 @@ def create_manifests(senders, receivers,hosts2ports, time_unit, time_after):
             elif time_after == 0:
                 str_config = str_config + '}\n\n'
             file_obj.write(str_config)
-
-def create_manifests2(host_num, hosts2ports, time_after, time_unit):
-    '''creat puppet manifest, basing on mobility model,
-    '''
-    exec_time = time.time() + time_after
-    with open(MANIFESTS_PATH, 'w') as file_obj:
-        common_config(file_obj)
-#    sys.exit(0)
-        for i in range(host_num):
-            pickle_str = pickle_pp(PICKLE_PATH, i)
-            name = 'ibr-' + str(i+1)
-            port_id = hosts2ports[name][0]
-            interface =  'ns' + port_id[:11]
-           # onlyif = "dtnd -c /etc/ibrdtn/ibrdtnd.conf -i " +\
-           #            interface + " &"
-            command = "ifstat -i " + interface +\
-                       " >/root/exp/ibr/net/" + name + ".txt & " +\
-                      "netem-agent " + str(exec_time) + " 5 " + str(time_unit) + " &"
-            #          "netem-agent " + str(exec_time) + " 500 " + str(time_unit) + " &"
-            #     '\tinclude pre_command\n' +\
-            str_config = 'node "' + name + '"{\n' + \
-                 '\tinclude ibrdtn_config\n' + \
-                 '\tinclude time_execute\n' +\
-                 '\tinclude pre_command\n' +\
-                 '\tinclude time_iptables\n' +\
-                 '\tinclude netem-agent_file\n' +\
-                 '\tinclude killagent_file\n' +\
-                 '\tinclude killdtn_file\n' 
-            if  time_after > 0:
-                str_config = str_config + pickle_str +\
-                     '\texec {\'' + command +'\':\n' +\
-                     '\t\tpath => "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:",\n' + \
-                     '\t}\n}\n\n'
-            elif time_after < 0:
-                str_config = str_config + '\tinclude killagent\n'
-                str_config = str_config + '\tinclude killdtn\n}\n\n'
-                #str_config = str_config + '\tinclude test_time\n}\n\n'
-            elif time_after == 0:
-                str_config = str_config + pickle_str +'}\n\n'
-            file_obj.write(str_config)
-
-def put_list(cgr_l, cgr):
-    for i, cgr_s in enumerate(cgr):
-        if len(cgr_l) <= i:
-            cgr_l[i] = []
-            cgr_l[i].append(cgr_s)
-        else:
-            cgr_l[i].append(cgr_s)
-
-def cgr_iptables_num(cgr_old, cgr):
-    '''return the times of a host calling cmd iptables(insert/delete),
-       from cgr_old state to cgr state
-       cgr [0, 1, 0,...]
-    '''
-    count = 0
-    if len(cgr_old) != len(cgr): return cgr.count(1)
-    for i,elem in  enumerate(cgr):
-        if elem + cgr_old[i] == 1:
-                count = count + 1
-    return count
-
-def max_iptables_num(cgr_l):
-    max_num = 0
-    for cgr in cgr_l.itervalues():
-        cgr_s_old  = []
-        for cgr_s in cgr:
-            num = cgr_iptables_num(cgr_s_old, cgr_s)
-            if num > max_num: max_num = num
-            cgr_s_old = cgr_s
-    return max_num
-
-def pickle_dump(coordiantes_l, cgr_l, hosts2ports, senders, receivers):
-    if not os.path.isdir(PICKLE_PATH): os.makedirs(PICKLE_PATH)
-    path = PICKLE_PATH + 'coordiantes_l'
-    with open(path, 'wb') as f:
-        pickle.dump(coordiantes_l, f)
-
-    path = PICKLE_PATH + 'hosts2ports'
-    with open(path, 'wb') as f:
-        pickle.dump(hosts2ports, f)
-
-    path = os.path.join(PICKLE_PATH, 'cgr_l')
-    with open(path, 'wb') as f:
-        pickle.dump(cgr_l, f)
-
-    path = os.path.join(PICKLE_PATH, 'senders')
-    with open(path, 'wb') as f:
-        pickle.dump(senders, f)
-
-    path = os.path.join(PICKLE_PATH, 'receivers')
-    with open(path, 'wb') as f:
-        pickle.dump(receivers, f)
-
-    for i, cgr in cgr_l.iteritems():
-        path = PICKLE_PATH + 'cgr_l' + '.' + str(i + 1)
-        with open(path, 'wb') as f:
-            pickle.dump(cgr, f)
-
-        if senders.has_key(i):
-            path = PICKLE_PATH + 'senders' + '.' + str(i + 1)
-            with open(path, 'wb') as f:
-                pickle.dump(senders[i], f)
-          
-        if receivers.has_key(i):
-            path = PICKLE_PATH + 'receivers' + '.' + str(i + 1)
-            with open(path, 'wb') as f:
-                pickle.dump(receivers[i], f)
-
 
 def main():
     try:
@@ -552,9 +382,15 @@ def main():
                                                username=USERNAME,password=PASSWORD)
     hosts2ports = get_emu_ports(nova, neutron, EMU_NETWORK)
     if first_flag == 'True':
+        sec_groups = create_security_groups(hosts2ports, neutron)
         update_etc_hosts(nova, HOSTS_PATH)
+    else:
+        sec_groups = get_security_groups(hosts2ports.keys(), neutron)
 
-    cgr_l = {}
+    #from pprint import pprint
+    #pprint(sec_groups)
+    #sys.exit(0)
+    cgr_q = Queue.Queue(0)
     model = community.Model()
     model_iter = model.run()
     time_count = 0
@@ -562,7 +398,7 @@ def main():
     sender_count = 0
     senders = {}
     receivers = {}
-    coordiantes_l = []
+
     #generate emulation data and file
     while model_iter:
         try:
@@ -570,10 +406,8 @@ def main():
             cgr, sender = model_iter.next()
         except StopIteration:
             break
-     
-        coordiantes = copy.deepcopy(model.coordiantes)
-        coordiantes_l.append(coordiantes)
-        put_list(cgr_l, cgr)
+    #    cgr_q.put(cgr[0])
+        cgr_q.put(cgr)
         if len(sender):
             sender_count = sender_count + 1
             if not senders.has_key(sender[0]): senders[sender[0]] = []
@@ -584,10 +418,45 @@ def main():
         time_count = time_count + 1
         if t_count > 0  and  time_count > t_count: break
 
-    #print max_iptables_num(cgr_l)
-    #sys.exit(0)
-    pickle_dump(coordiantes_l, cgr_l, hosts2ports, senders, receivers)   
-    create_manifests2(len(cgr_l), hosts2ports, time_after, 1)
+   
+    import cPickle as pickle
+    with open("./dump.txt",'w') as f:
+        pickle.dump(cgr_q, f)
+    sys.exit(0)
 
+    # control topology  real-timely
+    # test the longest time of updating topology once
+    topology_ctl_iter = topology_ctl(cgr_q, hosts2ports, sec_groups, neutron, True)
+    time_seq = []
+    while topology_ctl_iter:
+        #start = time.time()
+        try:
+            longest_time = topology_ctl_iter.next()
+            if longest_time > 1: break
+        except StopIteration:
+            break
+        #end = time.time()
+        #time_seq.append(end-start)
+        #time.sleep(0.01)
+    print "longest_time:%s"  % longest_time
+    #for v in time_seq:
+    #    print "time:%.5f" % (v, )
+    
+    #
+    create_manifests(senders, receivers, hosts2ports, time_unit, time_after)
+    #if test, exit here
+    if time_after <=0 : sys.exit(0)
+    sys.exit(0)
+    #for k,v in senders.iteritems():
+    #   print "node %d: send num %d" % (k,len(v))
+    #print "send_count :%d" % sender_count
+    #print ""
+    #print "time_count:%s" % time_count
+    #print ""
+    #sum = 0
+    #while not cgr_q.empty(): 
+    #    cgr = cgr_q.get()
+    #    sum = sum + cgr[55].count(1)
+    #print("sum:",sum )
 if __name__ == "__main__":
     sys.exit(main())
