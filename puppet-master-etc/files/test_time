@@ -1,0 +1,42 @@
+#!/bin/bash
+iptables -F INPUT
+# arg1=start, arg2=end, format: %s.%N  
+function getTiming() {  
+    start=$1  
+    end=$2  
+     
+    start_s=$(echo $start | cut -d '.' -f 1)  
+    start_ns=$(echo $start | cut -d '.' -f 2)  
+    end_s=$(echo $end | cut -d '.' -f 1)  
+    end_ns=$(echo $end | cut -d '.' -f 2)  
+  
+  
+# for debug..  
+#    echo $start  
+#    echo $end  
+  
+  
+    time=$(( ( 10#$end_s - 10#$start_s ) * 1000 + ( 10#$end_ns / 1000000 - 10#$start_ns / 1000000 ) ))  
+  
+  
+    echo "$time ms"  
+}  
+  
+function test_1(){
+ip_base="10.0.0."
+for i in `seq 60`
+do
+     num=i
+     ip=$ip_base"$i/32"
+#     echo  $ip
+#    tc qdisc change dev eth0 root netem delay $i'ms'
+     iptables -I INPUT -i eth0 -p ip --src $ip -j ACCEPT
+done
+}
+filepath='/root/exp/test/'$(hostname)'.time'
+#sleep "0.0"$(($RANDOM%56))
+start=`date +%s.%N`
+test_1
+end=`date +%s.%N`
+getTiming $start $end > $filepath
+echo $start >> $filepath

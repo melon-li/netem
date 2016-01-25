@@ -15,7 +15,7 @@ from neutronclient.v2_0 import client as neutron_client
 from novaclient import client as nova_client
 import community
 
-BASE_URL='http://192.168.99.112'
+BASE_URL='http://192.168.99.112' 
 AUTH_URL=BASE_URL + ':35357/v3'
 NEUTRON_URL=BASE_URL + ':5000/v2.0'
 TOKEN='admin'
@@ -421,6 +421,7 @@ def create_manifests2(host_num, hosts2ports, time_after, time_unit):
     '''creat puppet manifest, basing on mobility model,
     '''
     exec_time = time.time() + time_after
+    print "exec_time:%s, time_unit:%s" % (str(exec_time), str(time_unit))
     with open(MANIFESTS_PATH, 'w') as file_obj:
         common_config(file_obj)
 #    sys.exit(0)
@@ -433,8 +434,8 @@ def create_manifests2(host_num, hosts2ports, time_after, time_unit):
            #            interface + " &"
             command = "ifstat -i " + interface +\
                        " >/root/exp/ibr/net/" + name + ".txt & " +\
-                      "netem-agent " + str(exec_time) + " 5 " + str(time_unit) + " &"
-            #          "netem-agent " + str(exec_time) + " 500 " + str(time_unit) + " &"
+                      "netem-agent " + str(exec_time) + " 500 " + str(time_unit) + " & "
+                      #"netem-agent " + str(exec_time) + " 5 " + str(time_unit) + " &"
             #     '\tinclude pre_command\n' +\
             str_config = 'node "' + name + '"{\n' + \
                  '\tinclude ibrdtn_config\n' + \
@@ -529,13 +530,15 @@ def main():
     try:
         time_after = int(sys.argv[1])
         first_flag = sys.argv[2]
+        run_model_flag = sys.argv[3]
     except:
-        help_info = "Usage:%s <time_after> <first_flag>(True/False) [t_count]\n" % sys.argv[0]
+        help_info = "Usage:%s <time_after> <first_flag>(True/False) <run_model_flag> [t_count]\n" % sys.argv[0]
         help_info = help_info + "\t <time_after> after these seconds,start emulation\n"
         help_info = help_info + "\t time_after == 0, generate trasfering file puppet file\n"
         help_info = help_info + "\t time_after < 0, generate killdtn puppet file\n"
         help_info = help_info + "\t time_after > 0, generte doing some experiments puppet file\n"
         help_info = help_info + "\t <first_flag> True: generate hosts, False: do not\n"
+        help_info = help_info + "\t <run_model_flag> True: run model, False:use generated model data\n"
         help_info = help_info + "\t [t_count] is empty, Do  experiments to the end\n"
         help_info = help_info + "\t t_count > 0, after t_count time, break experiments\n"
 	print help_info
@@ -543,9 +546,15 @@ def main():
 
     t_count = 0
     try: 
-       t_count = sys.argv[3]
+       t_count = sys.argv[4]
     except:
         pass
+
+    if run_model_flag == 'True':
+        run_model_flag = True
+    else:
+        run_model_flag = False
+
     sess = create_session()
     nova = nova_client.Client('2', session=sess, )
     neutron = neutron_client.Client(auth_url=NEUTRON_URL, tenant_name=PROJECT_NAME,
@@ -564,7 +573,7 @@ def main():
     receivers = {}
     coordiantes_l = []
     #generate emulation data and file
-    while model_iter:
+    while model_iter and time_after > 0 and run_model_flag:
         try:
             #cgr:[[],[],...], sender:[src_index, dst_index](0, 1,...)
             cgr, sender = model_iter.next()
@@ -586,8 +595,9 @@ def main():
 
     #print max_iptables_num(cgr_l)
     #sys.exit(0)
-    pickle_dump(coordiantes_l, cgr_l, hosts2ports, senders, receivers)   
-    create_manifests2(len(cgr_l), hosts2ports, time_after, 1)
+    if time_after > 0 and run_model_flag:
+        pickle_dump(coordiantes_l, cgr_l, hosts2ports, senders, receivers)
+    create_manifests2(len(hosts2ports), hosts2ports, time_after, 1)
 
 if __name__ == "__main__":
     sys.exit(main())

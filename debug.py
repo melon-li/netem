@@ -4,6 +4,7 @@
 import numpy as np
 import math
 import sys    
+import os
 import time
 import matplotlib.pyplot as plt
 from pprint import pprint
@@ -17,20 +18,30 @@ def load_coordiantes(file_path):
     for coordiantes in coordiantes_l:
         yield coordiantes
 
+def init_debug():
+    cmd = ""
+    cmd = cmd + "/usr/bin/ntpq -c peers & "
+    cmd = cmd + "/usr/bin/ntpq -c assoc & "
+    os.system(cmd) 
+
 flag = 0
 
 def main():
     try:
         start_time = float(sys.argv[1])
+        #time_unit default 997
         time_unit = int(sys.argv[2])
     except:
          help_info = "Usage:%s <start_time> <time_unit(ms)>\n" % sys.argv[0]
+         print help_info
+         sys.exit(-1)
 
     colors = ['b', 'g', 'r', 'c', 'm' , 'y', 'k', 'slategrey', 'orange', 
               'mediumblue', 'brown', 'orchid']
 #     print(len(colors))
     file_path = './coordiantes_l'
 
+    init_debug()
     coordiantes_iter = load_coordiantes(file_path)
     patchs = []
     fig = plt.figure()
@@ -70,7 +81,7 @@ def main():
         return tuple(patchs)
 
     print "Waiting for starting"
-    while time.time() < (start_time -4.3):
+    while time.time() < (start_time -5):
         time.sleep(0.1)
     print "Start now!!!" 
     print time.time()

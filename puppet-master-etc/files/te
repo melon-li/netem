@@ -1,0 +1,18 @@
+#!/bin/bash
+exc_time=$1
+command_str=$2
+if [ "$exc_time" == "" -o "$command_str" == ""  ] ;then
+    echo -e "Usage: $0 TIMESTAMP  COMMAND\n\t Execute COMMAND at(or after) TIMESTAMP"
+    exit -1
+fi
+
+
+cur_time=`date +%s`
+while [ $cur_time -lt $exc_time  ]
+do
+    sleep 1
+    cur_time=`date +%s`
+done
+
+eval $command_str
+
