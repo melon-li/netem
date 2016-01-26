@@ -214,6 +214,25 @@ class time_execute {
     }
 }
 
+class eval_bash {
+    file { "/usr/bin/eval":
+        ensure => present,
+        mode => 777,
+        owner => root,
+        group => root,
+        source =>"puppet://os/files/eval"
+    }
+}
+
+class docker_time_test {
+    file { "/usr/bin/docker_tt":
+        ensure => present,
+        mode => 777,
+        owner => root,
+        group => root,
+        source =>"puppet://os/files/docker_tt"
+    }
+}
 class killdtn_file {
     file { "/usr/bin/killdtn":
         ensure => present,
@@ -403,6 +422,8 @@ def create_manifests(senders, receivers,hosts2ports, time_unit, time_after):
                  '\tinclude time_execute\n' +\
                  '\tinclude pre_command\n' +\
                  '\tinclude time_iptables\n' +\
+                 '\tinclude docker_time_test\n' +\
+                 '\tinclude eval_bash\n' +\
                  '\tinclude netem-agent_file\n' +\
                  '\tinclude killdtn_file\n'
             if  time_after > 0:
@@ -443,6 +464,8 @@ def create_manifests2(host_num, hosts2ports, time_after, time_unit):
                  '\tinclude pre_command\n' +\
                  '\tinclude time_iptables\n' +\
                  '\tinclude netem-agent_file\n' +\
+                 '\tinclude docker_time_test\n' +\
+                 '\tinclude eval_bash\n' +\
                  '\tinclude killagent_file\n' +\
                  '\tinclude killdtn_file\n' 
             if  time_after > 0:

@@ -1,0 +1,73 @@
+#!/bin/bash
+if [ "$1" == "" ];then
+    echo "Usage: $0 iptales_num(0, 250*250]"
+    exit -1
+fi
+
+iptables -F
+# arg1=start, arg2=end, format: %s.%N  
+function getTiming() {
+    start=$1
+    end=$2
+
+    start_s=$(echo $start | cut -d '.' -f 1)
+    start_ns=$(echo $start | cut -d '.' -f 2)
+    end_s=$(echo $end | cut -d '.' -f 1)
+    end_ns=$(echo $end | cut -d '.' -f 2)
+
+
+# for debug..  
+#    echo $start  
+#    echo $end  
+
+
+    time=$(( ( 10#$end_s - 10#$start_s ) * 1000 + ( 10#$end_ns / 1000000 - 10#$start_ns / 1000000 ) ))
+
+
+    echo "$time ms"  
+}
+
+function test_time(){
+start=`date +%s.%N`
+count=0
+ip_base='10.10.'
+if [ $1 -gt 250 ];then 
+   jj=$(($1/250))
+   left=$(($1%250))
+   for j in `seq $jj`
+   do
+       for i in `seq 250`
+       do
+           ip=$ip_base"$j.$i/32"
+#           count=$(($count +1))
+           iptables -w -I INPUT -i eth1 -p ip --src $ip -j ACCEPT
+       done
+   done 
+   for i in `seq $left`
+   do 
+       ip=$ip_base"$(($j+1)).$i/32"
+       #count=$(($count +1))
+       iptables -w -I INPUT -i eth1 -p ip --src $ip -j ACCEPT
+   
+   done
+else
+    for i in `seq $1`
+    do
+        num=i
+        ip=$ip_base"1.""$i/32"
+#     echo  $ip
+#    tc qdisc change dev eth0 root netem delay $i'ms'
+        iptables -w -I INPUT -i eth1 -p ip --src $ip -j ACCEPT
+      #     count=$(($count +1))
+     done
+fi
+end=`date +%s.%N`
+getTiming $start $end
+}
+
+for i in `seq 0 10 $1`
+do
+test_time $i
+done 
+
+

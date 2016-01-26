@@ -1,0 +1,15 @@
+#!/bin/bash
+src_path=$1
+
+if [ ! -d $src_path ];then
+    echo "Usage:$0 <src_path>"
+fi
+
+
+echo "File create_time reach_time" > reach_delay.txt
+for f in `cd $src_path && ls -tr ibr*`
+do
+create_time=`stat -c %X $f`
+reach_time=`stat -c %Y $f`
+echo "$f $create_time $reach_time" >> reach_delay.txt
+done
