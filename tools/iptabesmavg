@@ -1,0 +1,8 @@
+#!/bin/bash
+if [ "$1" == "" -o "$2" == "" ];then
+    echo "Usage: $0 <nodes_max(0, 100]> <iptables_fix_num>"
+    exit -1
+fi
+
+
+./iptabesmultieth $1 $2| awk -F"-" '{if($1 != "#" ){sum=sum+$1;}else if($1 == "#" && $2 !=0){print sum/$2;sum=0;}}'
