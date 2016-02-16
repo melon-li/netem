@@ -599,20 +599,21 @@ def main():
     while model_iter and time_after > 0 and run_model_flag:
         try:
             #cgr:[[],[],...], sender:[src_index, dst_index](0, 1,...)
-            cgr, sender = model_iter.next()
+            cgr, sender_l = model_iter.next()
         except StopIteration:
             break
      
         coordiantes = copy.deepcopy(model.coordiantes)
         coordiantes_l.append(coordiantes)
         put_list(cgr_l, cgr)
-        if len(sender):
-            sender_count = sender_count + 1
-            if not senders.has_key(sender[0]): senders[sender[0]] = []
-            senders[sender[0]].append([sender[1], time_count])
+        if len(sender_l):
+            for sender in sender_l:
+                sender_count = sender_count + 1
+                if not senders.has_key(sender[0]): senders[sender[0]] = []
+                senders[sender[0]].append([sender[1], time_count])
            
-            if not receivers.has_key(sender[1]): receivers[sender[1]] = []
-            receivers[sender[1]].append([sender[0], 0])
+                if not receivers.has_key(sender[1]): receivers[sender[1]] = []
+                receivers[sender[1]].append([sender[0], 0])
         time_count = time_count + 1
         if t_count > 0  and  time_count > t_count: break
 

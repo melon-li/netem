@@ -428,6 +428,8 @@ class Model(object):
             time_count = time_count + 1
             time = time + 1
             sender = []
+            sender1 = []
+            sender2 = []
             try:
                 topology_iter.next()
             except StopIteration:
@@ -435,11 +437,21 @@ class Model(object):
             if time <= self.g_time:
                 if time_count%10 == 0:
                     flag = 1
-                    sender = self.create_senders()
+                    sender1 = self.create_senders()
+                    sender2 = self.create_senders()
+                    while sender1[0] == sender2[0]:
+                        sender2 = self.create_senders()
+                    
                 if (time_count-5)%10 == 0 and flag == 1:
                     flag = 0
                     time_count = 5 
-                    sender = self.create_senders(False)
+                    sender1 = self.create_senders(False)
+                    sender2 = self.create_senders(False)
+                    while sender1[0] == sender2[0]:
+                        sender2 = self.create_senders(False)
+            
+            if len(sender1) > 0 and len(sender2) > 0:
+                sender = [sender1, sender2]
             yield [self.cgr, sender]
 
      
