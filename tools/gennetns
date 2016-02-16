@@ -1,0 +1,28 @@
+#!/bin/bash
+if [ "$1" == "" ];then 
+    echo "Usage: $0 <netns_num>"
+    echo -e "\t if netns_num is o, delete all netns"
+    exit -1
+fi
+
+if [ "$1" == "0" ];then
+    for i in `ip netns`
+    do
+        ip netns delete $i
+    done
+fi
+
+for i in `seq $1`
+do
+    ip netns add "ns$i"
+    if [ $(($i%2)) -eq 0 ];then 
+        ip link set nic0 netns "ns$i"
+        ip netns exec "ns$i" ifconfig nic0 up
+    fi
+    if [ $(($i%2)) -eq 1 ];then
+        ip link add name nic0 type veth peer name nic1
+        ip link set nic1 netns "ns$i"
+        ip netns exec "ns$i" ifconfig nic1 up
+    fi
+done
+
