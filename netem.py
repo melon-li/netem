@@ -455,8 +455,8 @@ def create_manifests2(host_num, hosts2ports, time_after, time_unit):
            #            interface + " &"
             command = "ifstat -i " + interface +\
                        " >/root/exp/ibr/net/" + name + ".txt & " +\
-                      "netem-agent " + str(exec_time) + " 500 " + str(time_unit) + " & "
-                      #"netem-agent " + str(exec_time) + " 5 " + str(time_unit) + " &"
+                      "netem-agent " + str(exec_time) + " 10 " + str(time_unit) + " & "
+                      #"netem-agent " + str(exec_time) + " 500 " + str(time_unit) + " &"
             #     '\tinclude pre_command\n' +\
             str_config = 'node "' + name + '"{\n' + \
                  '\tinclude ibrdtn_config\n' + \
