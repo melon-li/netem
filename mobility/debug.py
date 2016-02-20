@@ -26,7 +26,7 @@ def init2():
 
 
 flag = 0
-
+cnt = 0
 def main():
     try:
         start_time = float(sys.argv[1])
@@ -78,20 +78,22 @@ def main():
         return tuple(patchs)
     
     def animate(i):
-        sys.stdout.write("\b\b\b\b\b\b")
+        global cnt
         try:
             coordiantes = coordiantes_iter.next()
         except:
             sys.exit(0)
         for index,coordiante in enumerate(coordiantes):
             patchs[index].center = coordiante
-        i = str(i)
-        sys.stdout.write("\b"*len(i)+i)
+        
+        cnt = cnt + 1
+        c = str(cnt)
+        sys.stdout.write("\b"*len(c)+c)
         sys.stdout.flush()
         return tuple(patchs)
 
     print "Waiting for starting"
-    while time.time() < (start_time - 5):
+    while time.time() < (start_time - 13):
         time.sleep(0.1)
     print "Start now!!!" 
     print time.time()
