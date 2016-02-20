@@ -280,6 +280,7 @@ def main():
             time.sleep(0.1)
         log_str = str(time.time()) + ',' + str(count)
         log_count(host_num, log_str)
+    os.system("/usr/bin/killdtn;/usr/bin/killagent")
         
 if __name__ == '__main__':
     sys.exit(main())
