@@ -332,7 +332,7 @@ class Model(object):
                 nodes[name] = self.init_node_coordinates(gateway,
                                             self.community_mobile_num)
 #         pprint(len(nodes))
-        while time <=  (self.g_time + self.p_time):
+        while time <=  (self.i_time + self.g_time + self.p_time):
             self.coordiantes = []
             time = time + 1
             if elsewhere:
@@ -434,7 +434,7 @@ class Model(object):
                 topology_iter.next()
             except StopIteration:
                 break
-            if time <= self.g_time:
+            if time > self.i_time and time <=(self.i_time + self.g_time):
                 if time_count%10 == 0:
                     flag = 1
                     sender1 = self.create_senders()
