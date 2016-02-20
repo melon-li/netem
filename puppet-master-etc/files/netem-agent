@@ -41,10 +41,10 @@ def init(host_num, hosts2ports):
     name = 'ibr-' + str(host_num)
     port_id = hosts2ports[name][0]
     interface =  'ns' + port_id[:11]
-    cmd = '/sbin/iptables -w -F & '
-    cmd = cmd + "/sbin/iptables -w -I INPUT -i %s -j DROP & "
-    cmd = cmd + "/usr/bin/ntpq -c peers & "
-    cmd = cmd + "/usr/bin/ntpq -c assoc & "
+    cmd = '/sbin/iptables -w -F ;'
+    cmd = cmd + "/sbin/iptables -w -I INPUT -i %s -j DROP; "
+ #   cmd = cmd + "/usr/bin/ntpq -c peers & "
+ #   cmd = cmd + "/usr/bin/ntpq -c assoc & "
     rm_logdir()
     if os.system(cmd % (interface,)):
         error_str = 'Failed: ' + start_cmd
@@ -84,11 +84,11 @@ def topology_ctl(host_num, cgr_l, hosts2ports, test=False):
             name = 'ibr-' + str(index + 1)
             src_ip = hosts2ports[name][1]
             if state == -1:
-                command = '/sbin/iptables -w -D INPUT -i %s -p ip --src %s -j ACCEPT'
+                command = '/sbin/iptables -w -D INPUT -i %s -p ip --src %s -j ACCEPT &'
                 command = command % (interface, src_ip)
                 os.system(command)
             elif state == 1:
-                command = '/sbin/iptables  -w -I INPUT -i %s -p ip --src %s -j ACCEPT'
+                command = '/sbin/iptables  -w -I INPUT -i %s -p ip --src %s -j ACCEPT &'
                 command = command % (interface, src_ip)
                 os.system(command)
   

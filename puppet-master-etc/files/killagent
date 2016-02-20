@@ -1,10 +1,10 @@
-#/bin/bash
-pids=`ps axu | grep netem-agent | grep color -v | grep grep -v | awk '{print $2}'`
+#!/bin/bash
+pids=`ps axu | grep netem-agent | grep color -v | grep grep -v | grep "$0" -v| awk '{print $2}'`
 if [ -n "$pids" ];then
     kill -9 $pids
 fi
 
-pids=`ps axu | grep ifstat | grep color -v | grep grep -v | awk '{print $2}'`
+pids=`ps axu | grep ifstat | grep color -v | grep grep -v |grep "$0" -v| awk '{print $2}'`
 if [ -n "$pids" ];then
     kill -9 $pids
 fi

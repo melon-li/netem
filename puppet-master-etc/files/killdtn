@@ -1,5 +1,5 @@
 #!/bin/bash
-pids=`ps axu | grep dtn | grep color -v | grep grep -v | awk '{print $2}'`
+pids=`ps axu | grep dtn | grep color -v | grep grep -v | grep "$0" -v| awk '{print $2}'`
 if [ -n "$pids" ];then
     kill -9 $pids
 fi

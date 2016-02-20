@@ -1,0 +1,3 @@
+#!/bin/bash
+start=`date +%s.%N`
+echo $start > /tmp/docker.time
