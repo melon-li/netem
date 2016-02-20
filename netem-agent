@@ -239,10 +239,6 @@ def main():
             break
     print "Obtain host_num:%d" % (host_num,)
 
-    if os.system('/usr/bin/killdtn; /usr/bin/killagent'):
-        log_error(host_num, 'Failed: /usr/bin/killdtn or killagent')
-        sys.exit(-1) 
-
     path = base_path + 'cgr_l.' + str(host_num) 
     with open(path, 'rb') as f:
         cgr_l =  pickle.load(f)
