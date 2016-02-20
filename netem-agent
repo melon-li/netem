@@ -31,7 +31,7 @@ def log_count(host_num, log_str):
         f.write(log_str + '\n')
 
         
-def init_logdir():
+def init_dir():
     dir_path = BASE_PATH + "log"
     if os.path.isdir(dir_path):
         cmd = 'rm -rf ' + dir_path
@@ -51,12 +51,12 @@ def init_logdir():
     cmd = 'mkdir -p ' + send
     os.system(cmd)
    
-    net = BASE_PATH + "net/"
-    if os.path.isdir(net):
-        cmd = 'rm -rf ' + net
-        os.system(cmd)
-    cmd = 'mkdir -p ' + net
-    os.system(cmd)
+#    net = BASE_PATH + "net/"
+#    if os.path.isdir(net):
+#        cmd = 'rm -rf ' + net
+#        os.system(cmd)
+#    cmd = 'mkdir -p ' + net
+#    os.system(cmd)
 
 def init(host_num, hosts2ports):
     name = 'ibr-' + str(host_num)
@@ -64,7 +64,7 @@ def init(host_num, hosts2ports):
     interface =  'ns' + port_id[:11]
     cmd = '/sbin/iptables -w -F ;'
     cmd = cmd + "/sbin/iptables -w -I INPUT -i %s -j DROP ;"
-    init_logdir()
+    init_dir()
     if os.system(cmd % (interface,)):
         error_str = 'Failed: ' + start_cmd
         log_error(host_num, error_str)
