@@ -31,21 +31,34 @@ def log_count(host_num, log_str):
         f.write(log_str + '\n')
 
         
-def rm_logdir():
+def init_logdir():
     dir_path = BASE_PATH + "log"
     if os.path.isdir(dir_path):
         cmd = 'rm -rf ' + dir_path
         os.system(cmd)       
+    
+    rec = BASE_PATH + "rec/"
+    if os.path.isdir(rec):
+        cmd = 'rm -rf ' + rec +';mkdir -p ' + rec
+        os.system(cmd)
+      
+    send = BASE_PATH + "send/"
+    if os.path.isdir(send):
+        cmd = 'rm -rf ' + send +';mkdir -p ' + send
+        os.system(cmd)
+   
+    net = BASE_PATH + "net/"
+    if os.path.isdir(net):
+        cmd = 'rm -rf ' + net +';mkdir -p ' + net
+        os.system(cmd)
 
 def init(host_num, hosts2ports):
     name = 'ibr-' + str(host_num)
     port_id = hosts2ports[name][0]
     interface =  'ns' + port_id[:11]
-    cmd = '/sbin/iptables -w -F & '
-    cmd = cmd + "/sbin/iptables -w -I INPUT -i %s -j DROP & "
-    cmd = cmd + "/usr/bin/ntpq -c peers & "
-    cmd = cmd + "/usr/bin/ntpq -c assoc & "
-    rm_logdir()
+    cmd = '/sbin/iptables -w -F ;'
+    cmd = cmd + "/sbin/iptables -w -I INPUT -i %s -j DROP ;"
+    init_logdir()
     if os.system(cmd % (interface,)):
         error_str = 'Failed: ' + start_cmd
         log_error(host_num, error_str)
@@ -84,11 +97,11 @@ def topology_ctl(host_num, cgr_l, hosts2ports, test=False):
             name = 'ibr-' + str(index + 1)
             src_ip = hosts2ports[name][1]
             if state == -1:
-                command = '/sbin/iptables -w -D INPUT -i %s -p ip --src %s -j ACCEPT'
+                command = '/sbin/iptables -w -D INPUT -i %s -p ip --src %s -j ACCEPT &'
                 command = command % (interface, src_ip)
                 os.system(command)
             elif state == 1:
-                command = '/sbin/iptables  -w -I INPUT -i %s -p ip --src %s -j ACCEPT'
+                command = '/sbin/iptables  -w -I INPUT -i %s -p ip --src %s -j ACCEPT &'
                 command = command % (interface, src_ip)
                 os.system(command)
   
@@ -220,8 +233,8 @@ def main():
             break
     print "Obtain host_num:%d" % (host_num,)
 
-    if os.system('/usr/bin/killdtn &'):
-        log_error(host_num, 'Failed: /usr/bin/killdtn')
+    if os.system('/usr/bin/killdtn; /usr/bin/killagent'):
+        log_error(host_num, 'Failed: /usr/bin/killdtn or killagent')
         sys.exit(-1) 
 
     path = base_path + 'cgr_l.' + str(host_num) 
