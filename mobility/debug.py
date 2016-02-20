@@ -34,6 +34,8 @@ def main():
         time_unit = int(sys.argv[2])
     except:
          help_info = "Usage:%s <start_time> <time_unit(ms)>\n" % sys.argv[0]
+         print help_info
+         sys.exit(-1)
 
     colors = ['b', 'g', 'r', 'c', 'm' , 'y', 'k', 'slategrey', 'orange', 
               'mediumblue', 'brown', 'orchid']
@@ -76,12 +78,16 @@ def main():
         return tuple(patchs)
     
     def animate(i):
+        sys.stdout.write("\b\b\b\b\b\b")
         try:
             coordiantes = coordiantes_iter.next()
         except:
             sys.exit(0)
         for index,coordiante in enumerate(coordiantes):
             patchs[index].center = coordiante
+        i = str(i)
+        sys.stdout.write("\b"*len(i)+i)
+        sys.stdout.flush()
         return tuple(patchs)
 
     print "Waiting for starting"
@@ -89,15 +95,15 @@ def main():
         time.sleep(0.1)
     print "Start now!!!" 
     print time.time()
-    #anim = animation.FuncAnimation(fig, animate, 
-    #                           init_func=init, 
-    #                            frames=360, 
-    #                           interval=time_unit,
-    #                           blit=True)
+    anim = animation.FuncAnimation(fig, animate, 
+                               init_func=init, 
+                                frames=360, 
+                               interval=time_unit,
+                               blit=True)
     #plt.title('IPLAB Community Mobility Models', fontsize=10)
-    init()
-    plt.xlabel('1500m')
-    plt.ylabel('3000m')
+    #init()
+    #plt.xlabel('1500m')
+    #plt.ylabel('3000m')
     plt.show()
 
 if __name__ == '__main__':
