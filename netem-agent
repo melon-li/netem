@@ -39,18 +39,24 @@ def init_logdir():
     
     rec = BASE_PATH + "rec/"
     if os.path.isdir(rec):
-        cmd = 'rm -rf ' + rec +';mkdir -p ' + rec
+        cmd = 'rm -rf ' + rec 
         os.system(cmd)
+    cmd = 'mkdir -p ' + rec
+    os.system(cmd)
       
     send = BASE_PATH + "send/"
     if os.path.isdir(send):
-        cmd = 'rm -rf ' + send +';mkdir -p ' + send
+        cmd = 'rm -rf ' + send 
         os.system(cmd)
+    cmd = 'mkdir -p ' + send
+    os.system(cmd)
    
     net = BASE_PATH + "net/"
     if os.path.isdir(net):
-        cmd = 'rm -rf ' + net +';mkdir -p ' + net
+        cmd = 'rm -rf ' + net
         os.system(cmd)
+    cmd = 'mkdir -p ' + net
+    os.system(cmd)
 
 def init(host_num, hosts2ports):
     name = 'ibr-' + str(host_num)
