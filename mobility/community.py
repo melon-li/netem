@@ -33,7 +33,7 @@ class Model(object):
                  initial_time=500, 
                  generating_time=3000, 
                  propagating_time=8000,
-                 sending_time=2):
+                 sending_time=6):
         '''self.cgr and self.coordiantes list order format:
            [gateway1 community_mobile1 community_mobile2 community_mobile3 community_mobile4
            g2 c1 c2 c3 c4 ... gathering place]
