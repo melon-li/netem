@@ -1,9 +1,12 @@
 #!/bin/bash
+#Evaluate the delay of updating topology and link characteristics.
+
 if [ "$1" == "" -o "$2" == "" ];then
     echo "Usage: $0 <nodes_max(0, 100]> <iptables_fix_num>"
     exit -1
 fi
 
+#export END=`date +%s.%N`
 # arg1=start, arg2=end, format: %s.%N  
 function getTiming() {
     start=$1
@@ -14,14 +17,7 @@ function getTiming() {
     end_s=$(echo $end | cut -d '.' -f 1)
     end_ns=$(echo $end | cut -d '.' -f 2)
 
-
-# for debug..  
-#    echo $start  
-#    echo $end  
-
-
     time=$(( ( 10#$end_s - 10#$start_s ) * 1000 + ( 10#$end_ns / 1000000 - 10#$start_ns / 1000000 ) ))
-
 
 #    echo -e "$time ms"  
 #    echo  "$start $end $time"  
@@ -41,15 +37,15 @@ if [ $1 -gt 250 ];then
        for i in `seq 250`
        do
            ip=$ip_base"$j.$i/32"
-#           count=$(($count +1))
-          cmd=$cmd" iptables -w -I INPUT -i $2 -p ip --src $ip -j ACCEPT;"
+#          count=$(($count +1))
+          cmd=$cmd" iptables -w -I INPUT -p ip --src $ip -j ACCEPT;"
        done
    done 
    for i in `seq $left`
    do 
        ip=$ip_base"$(($j+1)).$i/32"
        #count=$(($count +1))
-       cmd="$cmd"" iptables -w -I INPUT -i $2 -p ip --src $ip -j ACCEPT;"
+       cmd="$cmd"" iptables -w -I INPUT -p ip --src $ip -j ACCEPT;"
    
    done
 else
@@ -57,48 +53,37 @@ else
     do
         num=i
         ip=$ip_base"1.""$i/32"
-#     echo  $ip
-#    tc qdisc change dev eth0 root netem delay $i'ms'
-        cmd="$cmd"" iptables -w -I INPUT -i $2 -p ip --src $ip -j ACCEPT;"
-      #     count=$(($count +1))
+#        echo  $ip
+#        tc qdisc change dev eth0 root netem delay $i'ms'
+        cmd="$cmd"" iptables -w -I INPUT -p ip --src $ip -j ACCEPT;"
+      # count=$(($count +1))
      done
 fi
+
 start=`date +%s.%N`
 #echo $cmd
 ip netns exec $3 eval "$cmd"
 end=`date +%s.%N`
-#echo $start
-getTiming $start $end
+echo $end >/mnt/test.txt
+#getTiming $start $end
+
 }
 
-for i in `seq 0 10 $1`
+
+cnt_max=$1
+cnt=0
+start=`date +%s.%N`
+
+for i in `ip netns`
 do
-    str=""
-    #for j in `seq $1`
-    for j in `seq $i`
-    do
-        if [ $(($j%2)) -eq 0 ];then 
-            eth_name="nic0"
-        else
-            eth_name="nic1"
-        fi
-#        str_s=`test_time $2 $eth_name "ns$j" &`
-        test_time $2 $eth_name "ns$j" &
-#        echo $str_s
-#        str="$str $str_s"
-    done
-    sleep 2
-    echo "#-$i-#-#------------------------------"
-#    sum=0
-#    echo $str
-#    for time in `echo $str`
-#    do
-#        sum=$(($sum + $time))
-#    done
-#    if [ $i -ne 0 ];then
-#       avg=$(($sum/$i))
-#    fi
-#    echo $avg
+    #echo "#-$i-$cnt-#-#------------------------------"
+    test_time $2 "lo" "$i" &
+    cnt=$(($cnt+1))
+    if [[ $cnt -gt $cnt_max ]];then
+        break
+    fi
 done 
 
-
+sleep 10
+end=`cat /mnt/test.txt`
+getTiming $start $end

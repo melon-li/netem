@@ -5,4 +5,5 @@ if [ "$1" == "" -o "$2" == "" ];then
 fi
 
 
-./iptabesmultieth $1 $2| awk -F"-" '{if($1 != "#" ){sum=sum+$1;}else if($1 == "#" && $2 !=0){print sum/$2;sum=0;}}'
+#./iptabesmultieth $1 $2| awk -F"-" '{if($1 != "#" ){sum=sum+$1;}else if($1 == "#" && $2 !=0){print sum/$2;sum=0;}}'
+./iptabesmultieth2 $1 $2| awk -F" " 'BEGIN{sum=0;cnt=0;}{sum=sum+$1;cnt=cnt+1}END{print sum/cnt}'

@@ -1,0 +1,407 @@
+
+class ion_config {
+    file { "/root/ion-3.3.1/ion-open-source/configs/loopback-ltp/loopback_ltp.rc":
+        ensure => present,
+        mode => 666,
+        owner => root,
+        group => root,
+        source =>"puppet://node1/files/loopback_ltp.rc"
+    }
+}
+
+class time_execute {
+    file { "/usr/bin/te":
+        ensure => present,
+        mode => 777,
+        owner => root,
+        group => root,
+        source =>"puppet://node1/files/te"
+    }
+}
+
+class eval_bash {
+    file { "/usr/bin/eval":
+        ensure => present,
+        mode => 777,
+        owner => root,
+        group => root,
+        source =>"puppet://node1/files/eval"
+    }
+}
+
+class docker_time_test {
+    file { "/usr/bin/docker_tt":
+        ensure => present,
+        mode => 777,
+        owner => root,
+        group => root,
+        source =>"puppet://node1/files/docker_tt"
+    }
+}
+class killdtn_file {
+    file { "/usr/bin/killdtn":
+        ensure => present,
+        mode => 777,
+        owner => root,
+        group => root,
+        source =>"puppet://node1/files/killdtn"
+    }
+}
+
+class killagent_file {
+    file { "/usr/bin/killagent":
+        ensure => present,
+        mode => 777,
+        owner => root,
+        group => root,
+        source =>"puppet://node1/files/killagent"
+    }
+}
+
+class netem-agent_file {
+    file { "/usr/bin/netem-agent":
+        ensure => present,
+        mode => 777,
+        owner => root,
+        group => root,
+        source =>"puppet://node1/files/netem-agent"
+    }
+}
+class time_iptables{
+    file {"/usr/bin/test_time":
+        ensure => present,
+        mode => 777,
+        owner => root,
+        group => root,
+        source =>"puppet://node1/files/test_time"
+    }
+
+}
+
+class test_time{
+    exec {"test_time":
+        path => "/usr/bin/:/usr/sbin/:/usr/local/bin:/usr/local/sbin:/sbin/:/bin"
+    }
+}
+
+class killdtn{
+    exec {"killdtn":
+        path => "/usr/bin/:/usr/sbin/:/usr/local/bin:/usr/local/sbin:/sbin/:/bin"
+    }
+}
+
+class killagent{
+    exec {"killagent":
+        path => "/usr/bin/:/usr/sbin/:/usr/local/bin:/usr/local/sbin:/sbin/:/bin"
+    }
+}
+
+class pre_command {
+    exec {"mount -t nfs 192.168.99.111:/home/exp /root/exp":
+           path => "/usr/bin/:/usr/sbin/:/usr/local/bin:/usr/local/sbin:/sbin/:/bin"
+    }
+}
+
+node "ibr-1"{
+	include ion_config
+}
+
+node "ibr-2"{
+	include ion_config
+}
+node "ibr-3"{
+	include ion_config
+}
+node "ibr-4"{
+	include ion_config
+}
+node "ibr-5"{
+	include ion_config
+}
+node "ibr-6"{
+	include ion_config
+}
+node "ibr-7"{
+	include ion_config
+}
+node "ibr-8"{
+	include ion_config
+}
+node "ibr-9"{
+	include ion_config
+}
+node "ibr-10"{
+	include ion_config
+}
+node "ibr-11"{
+	include ion_config
+}
+node "ibr-12"{
+	include ion_config
+}
+node "ibr-13"{
+	include ion_config
+}
+node "ibr-14"{
+	include ion_config
+}
+node "ibr-15"{
+	include ion_config
+}
+node "ibr-16"{
+	include ion_config
+}
+node "ibr-17"{
+	include ion_config
+}
+node "ibr-18"{
+	include ion_config
+}
+node "ibr-19"{
+	include ion_config
+}
+node "ibr-20"{
+	include ion_config
+}
+node "ibr-21"{
+	include ion_config
+}
+node "ibr-22"{
+	include ion_config
+}
+node "ibr-23"{
+	include ion_config
+}
+node "ibr-24"{
+	include ion_config
+}
+node "ibr-25"{
+	include ion_config
+}
+node "ibr-26"{
+	include ion_config
+}
+node "ibr-27"{
+	include ion_config
+}
+node "ibr-28"{
+	include ion_config
+}
+node "ibr-29"{
+	include ion_config
+}
+node "ibr-30"{
+	include ion_config
+}
+node "ibr-31"{
+	include ion_config
+}
+node "ibr-32"{
+	include ion_config
+}
+node "ibr-33"{
+	include ion_config
+}
+node "ibr-34"{
+	include ion_config
+}
+node "ibr-35"{
+	include ion_config
+}
+node "ibr-36"{
+	include ion_config
+}
+node "ibr-37"{
+	include ion_config
+}
+node "ibr-38"{
+	include ion_config
+}
+node "ibr-39"{
+	include ion_config
+}
+node "ibr-40"{
+	include ion_config
+}
+node "ibr-41"{
+	include ion_config
+}
+node "ibr-42"{
+	include ion_config
+}
+node "ibr-43"{
+	include ion_config
+}
+node "ibr-44"{
+	include ion_config
+}
+node "ibr-45"{
+	include ion_config
+}
+node "ibr-46"{
+	include ion_config
+}
+node "ibr-47"{
+	include ion_config
+}
+node "ibr-48"{
+	include ion_config
+}
+node "ibr-49"{
+	include ion_config
+}
+node "ibr-50"{
+	include ion_config
+}
+node "ibr-51"{
+	include ion_config
+}
+node "ibr-52"{
+	include ion_config
+}
+node "ibr-53"{
+	include ion_config
+}
+node "ibr-54"{
+	include ion_config
+}
+node "ibr-55"{
+	include ion_config
+}
+
+node "ibr2-1"{
+	include ion_config
+}
+node "ibr2-2"{
+	include ion_config
+}
+node "ibr2-3"{
+	include ion_config
+}
+node "ibr2-4"{
+	include ion_config
+}
+node "ibr2-5"{
+	include ion_config
+}
+node "ibr2-6"{
+	include ion_config
+}
+node "ibr2-7"{
+	include ion_config
+}
+node "ibr2-8"{
+	include ion_config
+}
+node "ibr2-9"{
+	include ion_config
+}
+node "ibr2-10"{
+	include ion_config
+}
+node "ibr2-11"{
+	include ion_config
+}
+node "ibr2-12"{
+	include ion_config
+}
+node "ibr2-13"{
+	include ion_config
+}
+node "ibr2-14"{
+	include ion_config
+}
+node "ibr2-15"{
+	include ion_config
+}
+node "ibr2-16"{
+	include ion_config
+}
+node "ibr2-17"{
+	include ion_config
+}
+node "ibr2-18"{
+	include ion_config
+}
+node "ibr2-19"{
+	include ion_config
+}
+node "ibr2-20"{
+	include ion_config
+}
+node "ibr2-21"{
+	include ion_config
+}
+node "ibr2-22"{
+	include ion_config
+}
+node "ibr2-23"{
+	include ion_config
+}
+node "ibr2-24"{
+	include ion_config
+}
+node "ibr2-25"{
+	include ion_config
+}
+node "ibr2-26"{
+	include ion_config
+}
+node "ibr2-27"{
+	include ion_config
+}
+node "ibr2-28"{
+	include ion_config
+}
+node "ibr2-29"{
+	include ion_config
+}
+node "ibr2-30"{
+	include ion_config
+}
+node "ibr2-31"{
+	include ion_config
+}
+node "ibr2-32"{
+	include ion_config
+}
+node "ibr2-33"{
+	include ion_config
+}
+node "ibr2-34"{
+	include ion_config
+}
+node "ibr2-35"{
+	include ion_config
+}
+node "ibr2-36"{
+	include ion_config
+}
+node "ibr2-37"{
+	include ion_config
+}
+node "ibr2-38"{
+	include ion_config
+}
+node "ibr2-39"{
+	include ion_config
+}
+node "ibr2-40"{
+	include ion_config
+}
+node "ibr2-41"{
+	include ion_config
+}
+node "ibr2-42"{
+	include ion_config
+}
+node "ibr2-43"{
+	include ion_config
+}
+node "ibr2-44"{
+	include ion_config
+}
+node "ibr2-45"{
+	include ion_config
+}
+

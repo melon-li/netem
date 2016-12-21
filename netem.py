@@ -15,17 +15,17 @@ from neutronclient.v2_0 import client as neutron_client
 from novaclient import client as nova_client
 import community
 
-BASE_URL='http://192.168.99.112' 
+BASE_URL='http://192.168.99.108' 
 AUTH_URL=BASE_URL + ':35357/v3'
 NEUTRON_URL=BASE_URL + ':5000/v2.0'
 TOKEN='admin'
-USERNAME='admin'
+USERNAME='melonli'
 PASSWORD='bjtungirc'
-PROJECT_NAME='demo'
-PROJECT_ID='11e5aab9a4d246c598e06c807c18383f'
+PROJECT_NAME='docker-node1'
+PROJECT_ID='eccc1a4f970e46cd84062107104b4958'
 USER_DOMAIN_ID='default'
 PROJECT_DOMAIN_ID='default'
-EMU_NETWORK='private2'
+EMU_NETWORK='private'
 
 HOSTS_PATH='/etc/hosts'
 MANIFESTS_PATH='/etc/puppet/manifests/site.pp'
@@ -44,7 +44,7 @@ def update_etc_hosts(nova, hosts_path):
     if an experimental node existed in hosts file, update it.
     '''
 
-    #hosts_path = '/home/os/hh.txt'
+    #hosts_path = '/home/node1/hh.txt'
     servers = nova.servers.list()
     with open(hosts_path, 'r') as hosts_obj:
         old_content = hosts_obj.read()
@@ -200,7 +200,7 @@ class ibrdtn_config {
         mode => 666,
         owner => root,
         group => root,
-        source =>"puppet://os/files/ibrdtnd.conf"
+        source =>"puppet://node1/files/ibrdtnd.conf"
     }
 }
 
@@ -210,7 +210,7 @@ class time_execute {
         mode => 777,
         owner => root,
         group => root,
-        source =>"puppet://os/files/te"
+        source =>"puppet://node1/files/te"
     }
 }
 
@@ -220,7 +220,7 @@ class eval_bash {
         mode => 777,
         owner => root,
         group => root,
-        source =>"puppet://os/files/eval"
+        source =>"puppet://node1/files/eval"
     }
 }
 
@@ -230,7 +230,7 @@ class docker_time_test {
         mode => 777,
         owner => root,
         group => root,
-        source =>"puppet://os/files/docker_tt"
+        source =>"puppet://node1/files/docker_tt"
     }
 }
 class killdtn_file {
@@ -239,7 +239,7 @@ class killdtn_file {
         mode => 777,
         owner => root,
         group => root,
-        source =>"puppet://os/files/killdtn"
+        source =>"puppet://node1/files/killdtn"
     }
 }
 
@@ -249,7 +249,7 @@ class killagent_file {
         mode => 777,
         owner => root,
         group => root,
-        source =>"puppet://os/files/killagent"
+        source =>"puppet://node1/files/killagent"
     }
 }
 
@@ -259,7 +259,7 @@ class netem-agent_file {
         mode => 777,
         owner => root,
         group => root,
-        source =>"puppet://os/files/netem-agent"
+        source =>"puppet://node1/files/netem-agent"
     }
 }
 class time_iptables{
@@ -268,7 +268,7 @@ class time_iptables{
         mode => 777,
         owner => root,
         group => root,
-        source =>"puppet://os/files/test_time"
+        source =>"puppet://node1/files/test_time"
     }
 
 }
@@ -292,7 +292,7 @@ class killagent{
 }
 
 class pre_command {
-    exec {"mount -t nfs 192.168.99.112:/home/exp /root/exp":
+    exec {"mount -t nfs 192.168.99.111:/home/exp /root/exp":
            path => "/usr/bin/:/usr/sbin/:/usr/local/bin:/usr/local/sbin:/sbin/:/bin"
     }
 }
@@ -306,7 +306,7 @@ def pickle_pp(path_dir, host_index):
         mode => 777,
         owner => root,
         group => root,
-        source =>"puppet://os/files/pickle/%s"
+        source =>"puppet://node1/files/pickle/%s"
     }
 
 '''

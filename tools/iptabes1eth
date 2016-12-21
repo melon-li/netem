@@ -15,11 +15,9 @@ function getTiming() {
     end_s=$(echo $end | cut -d '.' -f 1)
     end_ns=$(echo $end | cut -d '.' -f 2)
 
-
 # for debug..  
 #    echo $start  
 #    echo $end  
-
 
     time=$(( ( 10#$end_s - 10#$start_s ) * 1000 + ( 10#$end_ns / 1000000 - 10#$start_ns / 1000000 ) ))
 
@@ -39,7 +37,7 @@ if [ $1 -gt 250 ];then
        for i in `seq 250`
        do
            ip=$ip_base"$j.$i/32"
-#           count=$(($count +1))
+#          count=$(($count +1))
            iptables -w -I INPUT -i eth1 -p ip --src $ip -j ACCEPT
        done
    done 
@@ -56,18 +54,19 @@ else
         num=i
         ip=$ip_base"1.""$i/32"
 #     echo  $ip
-#    tc qdisc change dev eth0 root netem delay $i'ms'
+#     tc qdisc change dev eth0 root netem delay $i'ms'
         iptables -w -I INPUT -i eth1 -p ip --src $ip -j ACCEPT
-      #     count=$(($count +1))
+      #count=$(($count +1))
      done
 fi
 end=`date +%s.%N`
 getTiming $start $end
+
 }
 
 for i in `seq 0 10 $1`
 do
-test_time $i
+    test_time $i
 done 
 
 
