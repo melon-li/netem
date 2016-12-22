@@ -1,0 +1,122 @@
+#!/bin/bash
+#Evaluate the delay of updating topology and link characteristics.
+declare -A n2p
+for n in `ip netns`
+do
+    n2p["$n"]=`sudo ip netns exec $n ifconfig | grep "addr:10.0" -B1|grep Link| grep -v grep | awk -F" " '{print $1}'`
+done
+export n2p
+
+if [ "$1" == "" -o "$2" == "" ];then
+    echo "Usage: $0 <nodes_max(0, 100]> <iptables_fix_num>"
+    exit -1
+fi
+
+#export END=`date +%s.%N`
+# arg1=start, arg2=end, format: %s.%N  
+function getTiming() {
+    start=$1
+    end=$2
+
+    start_s=$(echo $start | cut -d '.' -f 1)
+    start_ns=$(echo $start | cut -d '.' -f 2)
+    end_s=$(echo $end | cut -d '.' -f 1)
+    end_ns=$(echo $end | cut -d '.' -f 2)
+
+    time=$(( ( 10#$end_s - 10#$start_s ) * 1000 + ( 10#$end_ns / 1000000 - 10#$start_ns / 1000000 ) ))
+
+#    echo -e "$time ms"  
+#    echo  "$start $end $time"  
+    echo  "$time"
+}
+
+#Record the end time in temporary file in a fast filesystem. 
+#
+#Arg1:
+#     iptables_fix_num 
+#Arg2:
+#     eth_name, which can be empty or None 
+#Arg3:
+#     netns name
+# 
+#
+function _test_time(){
+#cmd='iptables -w -F;'
+cmd=""
+count=0
+ip_base='10.10.'
+if [ $1 -gt 250 ];then 
+   jj=$(($1/250))
+   left=$(($1%250))
+   for j in `seq $jj`
+   do
+       for i in `seq 250`
+       do
+           ip=$ip_base"$j.$i/32"
+#          count=$(($count +1))
+          cmd=$cmd" iptables -w -I INPUT -p ip --src $ip -j ACCEPT;"
+       done
+   done 
+   for i in `seq $left`
+   do 
+       ip=$ip_base"$(($j+1)).$i/32"
+       #count=$(($count +1))
+       cmd="$cmd"" iptables -w -I INPUT -p ip --src $ip -j ACCEPT;"
+   
+   done
+else
+    for i in `seq $1`
+    do
+        num=i
+        ip=$ip_base"1.""$i/32"
+#        echo  $ip
+        cmd="$cmd"" tc qdisc change dev $2 root netem delay $i'ms';"
+#        cmd="$cmd"" iptables -w -I INPUT -p ip --src $ip -j ACCEPT;"
+      # count=$(($count +1))
+     done
+fi
+
+start=`date +%s.%N`
+#echo $cmd
+ip netns exec $3 eval "$cmd"
+end=`date +%s.%N`
+echo $end >/mnt/test.txt
+#getTiming $start $end
+
+}
+
+
+
+#echo "Init tc for every namespaces"
+#for i in `ip netns`
+#do
+#    p=${n2p["$i"]}
+#    cmd="tc qdisc add dev $p root netem delay 1ms;"
+#   sudo ip  netns exec $i "$cmd"
+#done
+#echo "Finished initing tc for every namespaces"
+
+function test_time(){
+    cnt_max=$1
+    cnt=1
+    start=`date +%s.%N`
+    for i in `ip netns`
+    do
+        p=${n2p["$i"]}
+        #echo "#-$i-$cnt-#-#------------------------------"
+        #echo "$i : $p"
+        _test_time $2 "$p" "$i" &
+        cnt=$(($cnt+1))
+        if [[ $cnt -gt $cnt_max ]];then
+            break
+        fi
+    done 
+    sleep 1
+    end=`cat /mnt/test.txt`
+    getTiming $start $end
+}
+
+for i in `seq 1 1000`
+do
+    test_time $1 $2
+done
